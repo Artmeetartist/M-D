@@ -525,6 +525,10 @@
                         <label>Booking Date</label>
                         <input type="date" id="v-date">
                     </div>
+                    <div class="input-group" style="width: 100%;">
+                        <label>More Info / Notes</label>
+                        <textarea id="v-notes" rows="3" placeholder="Additional details, contract notes, or specific requirements..."></textarea>
+                    </div>
                     <div style="width: 100%; display: flex; gap: 10px; margin-top: 10px;">
                         <button class="btn" onclick="saveVendor()">Save Vendor Details</button>
                         <button class="btn btn-outline" onclick="closeForm('add-vendor-row')">Cancel</button>
@@ -712,7 +716,7 @@
         // --- DATA STATE (IN-MEMORY) ---
         let budgetItems = [];
         let vendors = [
-            { id: 1, category: 'Venue', type: 'Resort Booking', name: 'The Himalayan Resort', total: 0, paid: 0, status: 'pending', contact: '', email: '', website: '', instagram: '', location: '', date: '', favorite: true }
+            { id: 1, category: 'Venue', type: 'Resort Booking', name: 'The Himalayan Resort', total: 0, paid: 0, status: 'pending', contact: '', email: '', website: '', instagram: '', location: '', date: '', notes: 'Check for late night music permissions.', favorite: true }
         ];
         let guests = [];
         let itineraries = [
@@ -1229,6 +1233,8 @@
                         ${v.location ? `<span><i class="fas fa-map-marker-alt"></i> ${v.location}</span>` : ''}
                     </div>
 
+                    ${v.notes ? `<div style="font-size:0.85rem; color:var(--text-main); margin-bottom:15px; padding: 10px; background: var(--input-bg); border-radius: 8px; border-left: 3px solid var(--primary-light); white-space: pre-wrap;">${v.notes}</div>` : ''}
+
                     <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem; font-weight:500;">
                         <span style="color:var(--text-muted)">Total:</span> <span class="currency" style="color: var(--text-main);">${formatCurrency(v.total)}</span>
                     </div>
@@ -1244,7 +1250,7 @@
 
         function openVendorForm() {
             editingVendorId = null;
-            ['v-category', 'v-type', 'v-name', 'v-total', 'v-paid', 'v-contact', 'v-email', 'v-website', 'v-instagram', 'v-location', 'v-date'].forEach(id => document.getElementById(id).value = '');
+            ['v-category', 'v-type', 'v-name', 'v-total', 'v-paid', 'v-contact', 'v-email', 'v-website', 'v-instagram', 'v-location', 'v-date', 'v-notes'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('add-vendor-row').style.display = 'flex';
         }
 
@@ -1262,6 +1268,7 @@
             document.getElementById('v-instagram').value = v.instagram || '';
             document.getElementById('v-location').value = v.location || '';
             document.getElementById('v-date').value = v.date || '';
+            document.getElementById('v-notes').value = v.notes || '';
             document.getElementById('add-vendor-row').style.display = 'flex';
         }
 
@@ -1278,6 +1285,7 @@
                 instagram: document.getElementById('v-instagram').value,
                 location: document.getElementById('v-location').value,
                 date: document.getElementById('v-date').value,
+                notes: document.getElementById('v-notes').value,
             };
 
             if(!data.name) { showToast("Name is required."); return; }
