@@ -71,7 +71,7 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border-glass); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-        ::placeholder { color: var(--text-muted); opacity: 0.7; }
+        ::-placeholder { color: var(--text-muted); opacity: 0.7; }
 
         /* ==========================================================================
            2. LAYOUT: SIDEBAR, MOBILE HEADER & MAIN AREA
@@ -248,16 +248,27 @@
         .widget-btn:hover { color: var(--primary-light); transform: scale(1.1); }
         
         .notes-list { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-        .note-item { padding: 15px; background: var(--input-bg); border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; border: 1px solid transparent; color: var(--text-main); }
-        .note-item:hover { border-color: var(--primary); box-shadow: 0 4px 15px rgba(216, 27, 96, 0.1); transform: translateY(-2px); }
-        .note-title-display { font-weight: 700; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; color: var(--primary-light); }
-        .note-preview-display { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); opacity: 0.8; margin-bottom: 8px;}
-        .note-date { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-align: right;}
+        .note-item { 
+            padding: 15px; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; 
+            border: 1px solid transparent; position: relative; overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+        }
+        .note-item::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%;
+            background: rgba(0,0,0,0.15); /* Simulates sticky note binding edge */
+        }
+        .note-item:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.2); transform: translateY(-3px) scale(1.02); z-index: 2; }
+        .note-title-display { font-weight: 700; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
+        .note-preview-display { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px; opacity: 0.9;}
+        .note-date { font-size: 0.7rem; font-weight: 600; text-align: right; opacity: 0.7;}
         
-        .note-editor { display: none; flex-direction: column; height: 100%; padding: 20px; }
-        .note-title-input { font-size: 1.4rem; font-family: 'Cormorant Garamond', serif; background: transparent; border: none; border-bottom: 1px dashed var(--border-glass); border-radius: 0; color: var(--primary-light); padding: 5px 0; margin-bottom: 15px; font-weight: bold; width: 100%; }
-        .note-textarea { flex: 1; background: transparent; border: none; color: var(--text-main); resize: none; font-size: 0.95rem; line-height: 1.6; padding: 0; width: 100%; }
+        .note-editor { display: none; flex-direction: column; height: 100%; padding: 20px; transition: background 0.4s; --editor-text: var(--text-main); }
+        .note-title-input { font-size: 1.4rem; font-family: 'Cormorant Garamond', serif; background: transparent; border: none; border-bottom: 1px dashed rgba(0,0,0,0.2); border-radius: 0; padding: 5px 0; margin-bottom: 15px; font-weight: bold; width: 100%; transition: color 0.4s; }
+        .note-textarea { flex: 1; background: transparent; border: none; resize: none; font-size: 0.95rem; line-height: 1.6; padding: 0; width: 100%; transition: color 0.4s; }
         .note-textarea:focus, .note-title-input:focus { box-shadow: none; outline: none; }
+        .note-editor input::placeholder, .note-editor textarea::placeholder { color: var(--editor-text); opacity: 0.6; }
+
+        .save-indicator { font-size: 0.8rem; opacity: 0; transition: opacity 0.3s; display: flex; align-items: center; gap: 5px; font-weight: 600; }
 
         /* Section Visibility */
         .view-section { display: none; animation: fadeIn 0.4s ease; }
@@ -270,6 +281,30 @@
 
         /* Mobile Overlay */
         .mobile-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 95; opacity: 0; transition: 0.3s ease; }
+
+        /* Full Page Vendor Modal */
+        .vendor-modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            z-index: 9999; display: none; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .vendor-modal-overlay.open { display: flex; opacity: 1; }
+        .vendor-modal-content {
+            width: 90%; max-width: 650px; max-height: 90vh; overflow-y: auto;
+            position: relative; padding: 40px; transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: var(--bg-base); border: 1px solid var(--border-glass); border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+        .vendor-modal-overlay.open .vendor-modal-content { transform: scale(1); }
+        .modal-close-btn {
+            position: absolute; top: 20px; right: 20px; background: rgba(216, 27, 96, 0.1); border: none;
+            width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; color: var(--primary); cursor: pointer; transition: 0.2s;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .modal-close-btn:hover { background: var(--primary); color: #fff; transform: scale(1.1); }
+        .vendor-card { cursor: pointer; transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s; }
+        .vendor-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(216,27,96,0.15); border-color: var(--primary); }
 
         /* MOBILE RESPONSIVE OPTIMIZATION */
         @media (max-width: 900px) {
@@ -320,7 +355,7 @@
             <button class="desktop-collapse-btn hide-on-mobile" onclick="toggleDesktopSidebar()"><i class="fas fa-chevron-left" id="collapse-icon"></i></button>
 
             <div class="brand-editable">
-                <input type="text" id="couple-names" class="brand-names" value="Magda & Deepak" title="Click to edit">
+                <input type="text" id="couple-names" class="brand-names" value="Magda&Deepak" title="Click to edit">
                 <div class="brand-details">
                     <i class="fas fa-calendar-alt"></i> 
                     <input type="date" id="wedding-date" class="brand-input" title="Click to edit date">
@@ -702,10 +737,21 @@
                 <div id="widget-editor-view" class="note-editor">
                     <input type="text" id="widget-note-title" class="note-title-input" placeholder="Note Title..." oninput="autoSaveWidgetNote()">
                     <textarea id="widget-note-content" class="note-textarea" placeholder="Start typing... Updates live everywhere!" oninput="autoSaveWidgetNote()"></textarea>
-                    <div style="text-align: right; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-glass);">
-                        <button onclick="deleteActiveWidgetNote()" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 5px; margin-left: auto;"><i class="fas fa-trash"></i> Delete Note</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.15);">
+                        <span id="widget-save-status" class="save-indicator"><i class="fas fa-check"></i> Saved</span>
+                        <button id="widget-delete-btn" onclick="deleteActiveWidgetNote()" style="background:transparent; border:none; cursor:pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 5px; transition: opacity 0.2s;"><i class="fas fa-trash"></i> Delete</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendor Details Modal -->
+    <div id="vendor-modal" class="vendor-modal-overlay" onclick="closeVendorDetails()">
+        <div class="vendor-modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close-btn" onclick="closeVendorDetails()"><i class="fas fa-times"></i></button>
+            <div id="vendor-modal-body">
+                <!-- Dynamically injected vendor details -->
             </div>
         </div>
     </div>
@@ -732,6 +778,28 @@
 
         let editingBudgetId = null, editingVendorId = null, editingGuestId = null, editingItineraryId = null;
         let activeWidgetNoteId = null;
+
+        // --- DYNAMIC PINK PALETTE ENGINE ---
+        const pinkPalette = [
+            { bg: '#F8BBD0', color: '#880E4F' }, // Light pink, dark text
+            { bg: '#F48FB1', color: '#880E4F' }, // Standard Pink
+            { bg: '#D81B60', color: '#FFFFFF' }, // Primary theme
+            { bg: '#E91E63', color: '#FFFFFF' }, // Vibrant pink
+            { bg: '#C2185B', color: '#FFFFFF' }, // Darker pink
+            { bg: '#AD1457', color: '#FFFFFF' }, // Deep wine
+            { bg: '#FF80AB', color: '#880E4F' }, // Accent pink
+            { bg: '#FF4081', color: '#FFFFFF' }  // Deep accent
+        ];
+
+        function getCategoryColor(cat) {
+            if(!cat) return { bg: 'var(--table-header)', color: 'var(--text-main)' };
+            let hash = 0;
+            for (let i = 0; i < cat.length; i++) {
+                hash = cat.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const index = Math.abs(hash) % pinkPalette.length;
+            return pinkPalette[index];
+        }
 
         // --- UTILS ---
         const formatCurrency = (amount) => '₹' + parseInt(amount).toLocaleString('en-IN');
@@ -952,7 +1020,15 @@
         function toggleWidgetPanel() {
             const panel = document.getElementById('widget-panel');
             panel.classList.toggle('open');
-            if (panel.classList.contains('open')) renderWidgetList();
+            if (panel.classList.contains('open')) {
+                if(!activeWidgetNoteId) renderWidgetList();
+            }
+        }
+
+        function getNoteColor(note) {
+            // Generates a deterministic color index based on the note's unique timestamp ID
+            const idx = note.id ? (note.id % pinkPalette.length) : 0;
+            return pinkPalette[idx];
         }
 
         function renderWidgetList() {
@@ -960,30 +1036,40 @@
             listContainer.innerHTML = '';
             
             if(appNotes.length === 0) { 
-                listContainer.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:30px 10px; font-size:0.9rem;">No notes here yet.<br><br>Click + to create one.</p>'; 
+                listContainer.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:40px 20px; font-size:0.95rem; display:flex; flex-direction:column; align-items:center;"><i class="fas fa-pen-fancy" style="font-size: 2.5rem; margin-bottom: 15px; color:var(--border-glass);"></i><span>No notes here yet.<br>Click + to create one.</span></div>'; 
                 return; 
             }
 
             // Show newest notes at the top in the widget
             [...appNotes].reverse().forEach(note => {
                 const previewText = note.content ? note.content.substring(0, 40) + (note.content.length > 40 ? '...' : '') : 'Empty note...';
+                const color = getNoteColor(note);
+                
                 const div = document.createElement('div');
                 div.className = 'note-item';
+                div.style.background = color.bg;
+                div.style.color = color.color;
                 div.onclick = () => openWidgetNoteEditor(note.id);
                 div.innerHTML = `
-                    <div class="note-title-display">${note.title || 'Untitled'}</div>
-                    <div class="note-preview-display">${previewText}</div>
-                    <div class="note-date">${note.date}</div>
+                    <div class="note-title-display" style="color: ${color.color};">${note.title || 'Untitled'}</div>
+                    <div class="note-preview-display" style="color: ${color.color};">${previewText}</div>
+                    <div class="note-date" style="color: ${color.color};">${note.date}</div>
                 `;
                 listContainer.appendChild(div);
             });
         }
 
         function showWidgetList() {
+            // Restore default header
+            document.querySelector('.notes-header').style.background = 'var(--table-header)';
+            document.querySelector('.notes-header').style.borderBottomColor = 'var(--border-glass)';
+            document.getElementById('widget-header-title').style.color = 'var(--primary-light)';
+            document.getElementById('widget-header-title').innerText = "Quick Notes";
+            document.querySelectorAll('.widget-btn').forEach(btn => btn.style.color = 'var(--text-muted)');
+
             document.getElementById('widget-list-view').style.display = 'flex';
             document.getElementById('widget-editor-view').style.display = 'none';
             document.getElementById('btn-back-widget').style.display = 'none';
-            document.getElementById('widget-header-title').innerText = "Quick Notes";
             activeWidgetNoteId = null;
             renderWidgetList();
         }
@@ -992,13 +1078,41 @@
             const note = appNotes.find(n => n.id === id);
             if(!note) return;
             activeWidgetNoteId = id;
+            
+            const color = getNoteColor(note);
+
+            // Populate text
             document.getElementById('widget-note-title').value = note.title;
             document.getElementById('widget-note-content').value = note.content;
             
+            // Immersive Color Theming
+            const editor = document.getElementById('widget-editor-view');
+            editor.style.background = color.bg;
+            editor.style.setProperty('--editor-text', color.color);
+            
+            const titleInput = document.getElementById('widget-note-title');
+            const contentInput = document.getElementById('widget-note-content');
+            titleInput.style.color = color.color;
+            titleInput.style.borderBottomColor = `rgba(${color.color === '#FFFFFF' ? '255,255,255' : '0,0,0'}, 0.2)`;
+            contentInput.style.color = color.color;
+            
+            // Theming the header to blend seamlessly
+            const header = document.querySelector('.notes-header');
+            header.style.background = color.bg;
+            header.style.borderBottomColor = `rgba(${color.color === '#FFFFFF' ? '255,255,255' : '0,0,0'}, 0.1)`;
+            document.getElementById('widget-header-title').style.color = color.color;
+            document.getElementById('widget-header-title').innerText = "Editing Note";
+            
+            // Icons styling inside editor
+            document.querySelectorAll('.widget-btn').forEach(btn => btn.style.color = color.color);
+            const deleteBtn = document.getElementById('widget-delete-btn');
+            deleteBtn.style.color = color.color;
+            document.getElementById('widget-save-status').style.color = color.color;
+
+            // View toggle
             document.getElementById('widget-list-view').style.display = 'none';
             document.getElementById('widget-editor-view').style.display = 'flex';
             document.getElementById('btn-back-widget').style.display = 'block';
-            document.getElementById('widget-header-title').innerText = "Editing...";
         }
 
         // Bridge to open widget directly from a Slack feed edit button
@@ -1015,14 +1129,22 @@
         }
 
         function createWidgetNote() {
+            // Date.now() ensures unique ID, ensuring it maps to a random pseudo-color
             const newNote = { id: Date.now(), title: '', content: '', date: new Date().toLocaleString() };
             appNotes.push(newNote); // Add to end (slack feed order)
             openWidgetNoteEditor(newNote.id);
             renderSlackNotes(); // Live sync creation
         }
 
+        let saveTimeout;
         function autoSaveWidgetNote() {
             if(!activeWidgetNoteId) return;
+            
+            // Immediate feedback: Saving Spinner
+            const statusEl = document.getElementById('widget-save-status');
+            statusEl.innerHTML = '<i class="fas fa-sync fa-spin"></i> Saving...';
+            statusEl.style.opacity = '1';
+
             const idx = appNotes.findIndex(n => n.id === activeWidgetNoteId);
             if(idx > -1) {
                 appNotes[idx].title = document.getElementById('widget-note-title').value;
@@ -1030,6 +1152,13 @@
                 // Live trigger the slack feed to update seamlessly in the background
                 renderSlackNotes();
             }
+
+            // Debounced feedback: Saved Success
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                statusEl.innerHTML = '<i class="fas fa-check"></i> Saved';
+                setTimeout(() => { statusEl.style.opacity = '0'; }, 2000); // fade out after 2s
+            }, 600);
         }
 
         function deleteActiveWidgetNote() {
@@ -1046,7 +1175,7 @@
         let countdownInterval = null;
 
         function initSettings() {
-            namesInput.value = 'Magda & Deepak';
+            namesInput.value = 'Magda&Deepak';
             locationInput.value = 'Manali, India';
             dateInput.value = new Date(new Date().setDate(new Date().getDate() + 145)).toISOString().split('T')[0];
             updateCountdown(dateInput.value);
@@ -1173,12 +1302,23 @@
             const filterContainer = document.getElementById('vendor-filters');
             const categories = [...new Set(vendors.map(v => v.category).filter(c => c && c.trim() !== ''))];
             
-            let html = `
-                <button class="filter-btn ${currentVendorFilter === 'all' ? 'active' : ''}" onclick="renderVendors('all')">All Vendors</button>
-                <button class="filter-btn ${currentVendorFilter === 'favorites' ? 'active' : ''}" onclick="renderVendors('favorites')"><i class="fas fa-heart" style="color:var(--primary-light);"></i> Favorites</button>
-            `;
+            const allColor = getCategoryColor('All Vendors');
+            const favColor = getCategoryColor('Favorites');
+
+            const getBtnHtml = (label, value, colorObj, icon = '') => {
+                const isActive = currentVendorFilter === value;
+                // Generate inline styling for the deterministic pink shade
+                const style = isActive 
+                    ? `background: ${colorObj.bg}; color: ${colorObj.color}; opacity: 1; border: 2px solid ${colorObj.color}; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transform: scale(1.05); font-weight: 700;` 
+                    : `background: ${colorObj.bg}; color: ${colorObj.color}; opacity: 0.55; border: 2px solid transparent; font-weight: 600;`;
+                return `<button class="filter-btn" style="${style}" onclick="renderVendors('${value}')">${icon}${label}</button>`;
+            };
+
+            let html = getBtnHtml('All Vendors', 'all', allColor);
+            html += getBtnHtml('Favorites', 'favorites', favColor, '<i class="fas fa-heart"></i> ');
+            
             categories.forEach(cat => {
-                html += `<button class="filter-btn ${currentVendorFilter === cat ? 'active' : ''}" onclick="renderVendors('${cat}')">${cat}</button>`;
+                html += getBtnHtml(cat, cat, getCategoryColor(cat));
             });
             filterContainer.innerHTML = html;
         }
@@ -1211,29 +1351,31 @@
                 const badgeClass = v.status === 'booked' ? 'confirmed' : 'pending';
                 const statusTxt = v.status === 'booked' ? 'Booked' : 'Pending';
                 const favIconClass = v.favorite ? 'fas fa-heart active' : 'far fa-heart inactive';
+                const catColor = getCategoryColor(v.category);
 
                 const div = document.createElement('div');
-                div.className = 'glass-panel';
+                div.className = 'glass-panel vendor-card';
                 div.style.position = 'relative';
+                div.onclick = () => openVendorDetails(v.id);
                 div.innerHTML = `
-                    <button class="fav-btn ${v.favorite ? 'active' : 'inactive'}" onclick="toggleFavoriteVendor(${v.id})" title="Favorite"><i class="${favIconClass}"></i></button>
-                    <div style="position:absolute; top:15px; right:15px;">
-                        <button onclick="editVendor(${v.id})" style="background:transparent; border:none; color:var(--primary-light); cursor:pointer; margin-right:10px; font-size:1.1rem;"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteVendor(${v.id})" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem;"><i class="fas fa-trash"></i></button>
+                    <button class="fav-btn ${v.favorite ? 'active' : 'inactive'}" onclick="event.stopPropagation(); toggleFavoriteVendor(${v.id})" title="Favorite"><i class="${favIconClass}"></i></button>
+                    <div style="position:absolute; top:15px; right:15px; z-index: 2;">
+                        <button onclick="event.stopPropagation(); editVendor(${v.id})" style="background:transparent; border:none; color:var(--primary-light); cursor:pointer; margin-right:10px; font-size:1.1rem;"><i class="fas fa-edit"></i></button>
+                        <button onclick="event.stopPropagation(); deleteVendor(${v.id})" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem;"><i class="fas fa-trash"></i></button>
                     </div>
-                    <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; margin-top: 15px; font-weight: 600;">
-                        <span style="border: 1px solid var(--border-glass); padding: 4px 10px; border-radius: 12px; background: var(--table-header);">${v.category || 'Uncategorized'}</span>
+                    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; margin-top: 30px; font-weight: 600; word-wrap: break-word;">
+                        <span style="border: none; padding: 5px 12px; border-radius: 12px; background: ${catColor.bg}; color: ${catColor.color}; display: inline-block;">${v.category || 'Uncategorized'}</span>
                     </div>
-                    <h3 class="serif" style="font-size:1.5rem; margin-bottom:5px; color: var(--text-main);">${v.name}</h3>
-                    <div style="font-size:0.85rem; color:var(--primary-light); margin-bottom:15px; font-weight: 500;">${v.type}</div>
+                    <h3 class="serif" style="font-size:1.5rem; margin-bottom:5px; color: var(--text-main); word-wrap: break-word;">${v.name}</h3>
+                    <div style="font-size:0.85rem; color:var(--primary-light); margin-bottom:15px; font-weight: 500; word-wrap: break-word;">${v.type}</div>
                     
-                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px; display:flex; flex-direction:column; gap:6px;">
+                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px; display:flex; flex-direction:column; gap:6px; word-wrap: break-word; overflow: hidden;">
                         ${v.contact ? `<span><i class="fas fa-phone"></i> ${v.contact}</span>` : ''}
                         ${v.email ? `<span><i class="fas fa-envelope"></i> ${v.email}</span>` : ''}
                         ${v.location ? `<span><i class="fas fa-map-marker-alt"></i> ${v.location}</span>` : ''}
                     </div>
 
-                    ${v.notes ? `<div style="font-size:0.85rem; color:var(--text-main); margin-bottom:15px; padding: 10px; background: var(--input-bg); border-radius: 8px; border-left: 3px solid var(--primary-light); white-space: pre-wrap;">${v.notes}</div>` : ''}
+                    ${v.notes ? `<div style="font-size:0.85rem; color:var(--text-main); margin-bottom:15px; padding: 10px; background: var(--input-bg); border-radius: 8px; border-left: 3px solid ${catColor.bg}; white-space: pre-wrap; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${v.notes}</div>` : ''}
 
                     <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem; font-weight:500;">
                         <span style="color:var(--text-muted)">Total:</span> <span class="currency" style="color: var(--text-main);">${formatCurrency(v.total)}</span>
@@ -1311,6 +1453,94 @@
             showToast("Vendor removed.");
         }
 
+        // --- VENDOR MODAL LOGIC ---
+        function openVendorDetails(id) {
+            const v = vendors.find(i => i.id === id);
+            if(!v) return;
+            
+            const bal = v.total - v.paid;
+            const badgeClass = v.status === 'booked' ? 'confirmed' : 'pending';
+            const statusTxt = v.status === 'booked' ? 'Booked' : 'Pending';
+            const catColor = getCategoryColor(v.category);
+
+            const modalBody = document.getElementById('vendor-modal-body');
+            modalBody.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <span style="padding: 6px 15px; border-radius: 15px; background: ${catColor.bg}; color: ${catColor.color}; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                        ${v.category || 'Uncategorized'}
+                    </span>
+                </div>
+                <h2 class="serif" style="text-align: center; font-size: 2.5rem; color: var(--text-main); margin-bottom: 5px; word-wrap: break-word;">${v.name}</h2>
+                <div style="text-align: center; font-size: 1.1rem; color: var(--primary-light); font-weight: 500; margin-bottom: 25px;">${v.type}</div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: var(--input-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-glass);">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 8px;">Contact Info</div>
+                        <div style="font-size: 0.95rem; color: var(--text-main); word-wrap: break-word; display: flex; flex-direction: column; gap: 8px;">
+                            ${v.contact ? `<div><i class="fas fa-phone" style="width: 25px; color: ${catColor.bg !== '#FFFFFF' ? catColor.bg : 'var(--primary)'}; text-align: center;"></i> ${v.contact}</div>` : ''}
+                            ${v.email ? `<div><i class="fas fa-envelope" style="width: 25px; color: ${catColor.bg !== '#FFFFFF' ? catColor.bg : 'var(--primary)'}; text-align: center;"></i> <a href="mailto:${v.email}" style="color: inherit;">${v.email}</a></div>` : ''}
+                            ${v.location ? `<div><i class="fas fa-map-marker-alt" style="width: 25px; color: ${catColor.bg !== '#FFFFFF' ? catColor.bg : 'var(--primary)'}; text-align: center;"></i> ${v.location}</div>` : ''}
+                            ${!v.contact && !v.email && !v.location ? '<span style="color:var(--text-muted); font-style:italic;">No contact details.</span>' : ''}
+                        </div>
+                    </div>
+                    <div style="background: var(--input-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-glass);">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 8px;">Links</div>
+                        <div style="font-size: 0.95rem; color: var(--text-main); word-wrap: break-word; display: flex; flex-direction: column; gap: 8px;">
+                            ${v.website ? `<div><i class="fas fa-globe" style="width: 25px; color: ${catColor.bg !== '#FFFFFF' ? catColor.bg : 'var(--primary)'}; text-align: center;"></i> <a href="${v.website}" target="_blank" style="color: inherit;">Website</a></div>` : ''}
+                            ${v.instagram ? `<div><i class="fab fa-instagram" style="width: 25px; color: ${catColor.bg !== '#FFFFFF' ? catColor.bg : 'var(--primary)'}; text-align: center;"></i> <a href="https://instagram.com/${v.instagram.replace('@','')}" target="_blank" style="color: inherit;">${v.instagram}</a></div>` : ''}
+                            ${!v.website && !v.instagram ? '<span style="color:var(--text-muted); font-style:italic;">No links provided.</span>' : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: var(--table-header); padding: 20px; border-radius: 12px; border: 1px solid var(--border-glass); margin-bottom: 25px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1.1rem; font-weight: 500;">
+                        <span style="color: var(--text-muted);">Total Fee:</span> <span class="currency" style="color: var(--text-main);">${formatCurrency(v.total)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1.1rem; font-weight: 500;">
+                        <span style="color: var(--text-muted);">Amount Paid:</span> <span class="currency" style="color: var(--success);">${formatCurrency(v.paid)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 1.2rem; border-top: 1px solid var(--border-glass); padding-top: 10px; font-weight: 700;">
+                        <span style="color: var(--text-main);">Balance Due:</span> <span class="currency" style="color: ${bal > 0 ? 'var(--warning)' : 'var(--text-main)'};">${formatCurrency(bal)}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="badge ${badgeClass}" style="font-size: 0.9rem; padding: 8px 16px;">${statusTxt}</span>
+                    </div>
+                </div>
+
+                ${v.notes ? `
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 10px;">More Info / Notes</div>
+                    <div style="background: var(--input-bg); padding: 15px; border-radius: 12px; border-left: 4px solid ${catColor.bg}; font-size: 0.95rem; color: var(--text-main); white-space: pre-wrap; word-wrap: break-word; line-height: 1.6;">${v.notes}</div>
+                </div>` : ''}
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn" onclick="closeVendorDetails(); editVendor(${v.id}); event.stopPropagation();" style="width: 100%; justify-content: center; background: ${catColor.bg}; color: ${catColor.color};"><i class="fas fa-edit"></i> Edit Vendor</button>
+                </div>
+            `;
+            
+            const modal = document.getElementById('vendor-modal');
+            modal.classList.add('open');
+        }
+
+        function closeVendorDetails() {
+            document.getElementById('vendor-modal').classList.remove('open');
+        }
+
+        function copyVendorNotes(id) {
+            const v = vendors.find(i => i.id === id);
+            if(!v || !v.notes) return;
+            
+            const el = document.createElement('textarea');
+            el.value = v.notes;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            
+            showToast("Notes copied to clipboard!");
+        }
+
         // --- 3. GUEST MANAGER LOGIC ---
         function renderGuests() {
             const tbody = document.getElementById('guest-table-body');
@@ -1331,6 +1561,9 @@
                         ${g.email ? `<div><i class="fas fa-envelope"></i> ${g.email}</div>` : ''}
                     </td>
                     <td style="font-weight: 500;">${g.side}</td>
+                    <td style="text-align: center;">
+                        ${g.notes ? `<button onclick="openGuestMessage(${g.id})" style="background: transparent; border: none; color: var(--primary-light); cursor: pointer; font-size: 1.3rem;" title="View Message"><i class="fas fa-envelope-open-text"></i></button>` : `<span style="color: var(--text-muted); opacity: 0.5;">-</span>`}
+                    </td>
                     <td>
                         <select onchange="changeRSVP(${g.id}, this.value)" style="padding:6px; font-size:0.8rem; border-color: var(--border-glass); background: var(--input-bg); font-weight: 600;">
                             <option value="pending" ${g.rsvp==='pending'?'selected':''}>Pending</option>
@@ -1355,7 +1588,9 @@
 
         function openGuestForm() {
             editingGuestId = null;
-            ['g-name', 'g-phone', 'g-email'].forEach(id => document.getElementById(id).value = '');
+            ['g-name', 'g-phone', 'g-email', 'g-notes'].forEach(id => {
+                if(document.getElementById(id)) document.getElementById(id).value = '';
+            });
             document.getElementById('g-side').selectedIndex = 0;
             document.getElementById('g-rsvp').selectedIndex = 0;
             document.getElementById('add-guest-row').style.display = 'flex';
@@ -1369,6 +1604,7 @@
             document.getElementById('g-email').value = g.email || '';
             document.getElementById('g-side').value = g.side || "Bride's Side";
             document.getElementById('g-rsvp').value = g.rsvp || "pending";
+            if(document.getElementById('g-notes')) document.getElementById('g-notes').value = g.notes || '';
             document.getElementById('add-guest-row').style.display = 'flex';
         }
 
@@ -1378,19 +1614,32 @@
             const email = document.getElementById('g-email').value;
             const side = document.getElementById('g-side').value;
             const rsvp = document.getElementById('g-rsvp').value;
+            const notes = document.getElementById('g-notes') ? document.getElementById('g-notes').value : '';
 
             if(!name) { showToast("Guest name is required."); return; }
 
             if(editingGuestId) {
                 const idx = guests.findIndex(i => i.id === editingGuestId);
-                guests[idx] = { ...guests[idx], name, phone, email, side, rsvp };
+                guests[idx] = { ...guests[idx], name, phone, email, side, rsvp, notes };
                 showToast("Guest updated.");
             } else {
-                guests.push({ id: Date.now(), name, phone, email, side, rsvp });
+                guests.push({ id: Date.now(), name, phone, email, side, rsvp, notes });
                 showToast("Guest added.");
             }
             closeForm('add-guest-row');
             renderGuests();
+        }
+
+        function openGuestMessage(id) {
+            const g = guests.find(i => i.id === id);
+            if(!g || !g.notes) return;
+            document.getElementById('guest-modal-name').innerText = g.name;
+            document.getElementById('guest-modal-message').innerText = g.notes;
+            document.getElementById('guest-modal').classList.add('open');
+        }
+
+        function closeGuestMessage() {
+            document.getElementById('guest-modal').classList.remove('open');
         }
 
         function changeRSVP(id, newStatus) {
