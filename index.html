@@ -155,7 +155,7 @@
         .nav-btn.active { background: rgba(216, 27, 96, 0.15); border-color: var(--border-glass); color: var(--primary-light); font-weight: 500; }
         .nav-btn:active { transform: scale(0.98); }
 
-        .main-content { flex: 1; overflow-y: auto; padding: 40px 50px; position: relative; }
+        .main-content { flex: 1; overflow-y: auto; padding: 40px 50px; position: relative; scroll-behavior: smooth; }
 
         /* ==========================================================================
            3. UI COMPONENTS
@@ -187,7 +187,7 @@
         .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; }
 
         /* Forms & Tables */
-        .form-row { display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap; }
+        .form-row { display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap; scroll-margin-top: 40px; }
         .input-group { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 200px; }
         label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
         input, select, textarea {
@@ -218,10 +218,13 @@
         .cd-num { font-size: 2.8rem; font-family: 'Cormorant Garamond', serif; color: var(--primary-light); line-height: 1; }
         .cd-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin-top: 10px; font-weight: 600;}
 
-        /* Vendor CRM Specifics */
-        .vendor-filters { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 10px; }
-        .filter-btn { background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-muted); padding: 8px 16px; border-radius: 20px; cursor: pointer; white-space: nowrap; font-size: 0.85rem; font-weight: 500;}
-        .filter-btn:hover, .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        /* Vendor CRM & Filters Specifics */
+        .vendor-filters { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 10px; align-items: center; }
+        .filter-btn { padding: 8px 18px; border-radius: 20px; cursor: pointer; white-space: nowrap; font-size: 0.85rem; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); outline: none; }
+        .filter-btn:hover { transform: translateY(-2px) scale(1.05); opacity: 1 !important; box-shadow: 0 6px 15px rgba(0,0,0,0.15); z-index: 2; }
+        .filter-btn-outline { background: var(--input-bg); border: 1px solid var(--border-glass); color: var(--text-muted); }
+        .filter-btn-outline:hover, .filter-btn-outline.active { background: var(--primary); color: #fff; border-color: var(--primary); opacity: 1 !important; }
+        
         .fav-btn { position: absolute; top: 15px; left: 15px; background: transparent; border: none; font-size: 1.3rem; cursor: pointer; z-index: 10; }
         .fav-btn.active { color: var(--primary); transform: scale(1.1); }
         .fav-btn.inactive { color: var(--border-glass); }
@@ -303,8 +306,24 @@
             display: flex; justify-content: center; align-items: center;
         }
         .modal-close-btn:hover { background: var(--primary); color: #fff; transform: scale(1.1); }
-        .vendor-card { cursor: pointer; transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s; }
+        .vendor-card { cursor: pointer; transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s; overflow: hidden; position: relative; }
         .vendor-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(216,27,96,0.15); border-color: var(--primary); }
+
+        /* Diagonal Ribbon Tag */
+        .ribbon-wrapper {
+            position: absolute; top: 0; right: 0; width: 85px; height: 85px;
+            overflow: hidden; z-index: 10; cursor: pointer;
+            border-top-right-radius: 16px;
+        }
+        .ribbon {
+            position: absolute; display: flex; justify-content: center; align-items: center; gap: 4px;
+            width: 130px; padding: 5px 0; background: var(--table-header); color: var(--text-muted);
+            font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+            transform: rotate(45deg); top: 16px; right: -36px; transition: 0.3s ease;
+            border-bottom: 1px solid var(--border-glass); border-top: 1px solid var(--border-glass);
+        }
+        .ribbon-wrapper:hover .ribbon { background: rgba(216, 27, 96, 0.1); color: var(--primary-light); }
+        .ribbon.selected { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 4px 10px rgba(216, 27, 96, 0.3); }
 
         /* MOBILE RESPONSIVE OPTIMIZATION */
         @media (max-width: 900px) {
@@ -504,8 +523,17 @@
                 </div>
 
                 <div class="vendor-filters" id="vendor-filters">
-                    <button class="filter-btn active" onclick="renderVendors('all')">All Vendors</button>
-                    <button class="filter-btn" onclick="renderVendors('favorites')"><i class="fas fa-heart" style="color:var(--primary-light);"></i> Favorites</button>
+                    <!-- dynamically injected pink palette buttons -->
+                </div>
+
+                <!-- Vendor Selection Summary Banner -->
+                <div id="vendor-selection-summary" style="display: none; background: var(--primary); color: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; align-items: center; justify-content: space-between; box-shadow: 0 10px 20px rgba(216,27,96,0.2); flex-wrap: wrap; gap: 15px; transition: 0.3s ease;">
+                    <div style="font-weight: 600; font-size: 1.1rem;"><i class="fas fa-check-square" style="margin-right: 5px;"></i> <span id="v-sel-count">0</span> Vendors Selected</div>
+                    <div style="display: flex; gap: 20px; font-size: 1rem; align-items: center; flex-wrap: wrap;">
+                        <div>Total Budget: <strong class="currency" id="v-sel-total" style="font-size: 1.2rem;">₹0</strong></div>
+                        <div>Balance Due: <strong class="currency" id="v-sel-bal" style="font-size: 1.2rem;">₹0</strong></div>
+                        <button onclick="clearVendorSelection()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; margin-left: 10px; transition: background 0.3s;"><i class="fas fa-times"></i> Clear</button>
+                    </div>
                 </div>
 
                 <div class="glass-panel form-row" id="add-vendor-row" style="display: none; flex-wrap: wrap;">
@@ -594,6 +622,13 @@
                     </div>
                 </div>
 
+                <div class="vendor-filters" id="guest-filters" style="margin-bottom: 20px;">
+                    <button class="filter-btn filter-btn-outline active" data-filter="all" onclick="setGuestFilter('all')">All Guests</button>
+                    <button class="filter-btn filter-btn-outline" data-filter="Bride's Side" onclick="setGuestFilter(`Bride's Side`)">Bride's Side</button>
+                    <button class="filter-btn filter-btn-outline" data-filter="Groom's Side" onclick="setGuestFilter(`Groom's Side`)">Groom's Side</button>
+                    <button class="filter-btn filter-btn-outline" data-filter="Mutual" onclick="setGuestFilter('Mutual')">Mutual</button>
+                </div>
+
                 <div class="glass-panel form-row" id="add-guest-row" style="display: none; flex-wrap: wrap;">
                     <div class="input-group">
                         <label>Guest Name</label>
@@ -623,6 +658,10 @@
                             <option value="declined">Declined</option>
                         </select>
                     </div>
+                    <div class="input-group" style="width: 100%;">
+                        <label>Guest Message / Notes</label>
+                        <textarea id="g-notes" rows="2" placeholder="Any special requests or messages from the guest..."></textarea>
+                    </div>
                     <div style="width: 100%; display: flex; gap: 10px; margin-top: 10px;">
                         <button class="btn" onclick="saveGuest()">Save Guest</button>
                         <button class="btn btn-outline" onclick="closeForm('add-guest-row')">Cancel</button>
@@ -637,6 +676,7 @@
                                     <th>Guest Name</th>
                                     <th>Contact Info</th>
                                     <th>Side</th>
+                                    <th style="text-align: center;">Message</th>
                                     <th>RSVP Status</th>
                                     <th>Action</th>
                                 </tr>
@@ -756,13 +796,26 @@
         </div>
     </div>
 
+    <!-- Guest Message Modal -->
+    <div id="guest-modal" class="vendor-modal-overlay" onclick="closeGuestMessage()">
+        <div class="vendor-modal-content" style="max-width: 450px;" onclick="event.stopPropagation()">
+            <button class="modal-close-btn" onclick="closeGuestMessage()"><i class="fas fa-times"></i></button>
+            <h3 class="serif" id="guest-modal-name" style="font-size: 1.8rem; margin-bottom: 15px; color: var(--text-main);"></h3>
+            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 10px;">Message / Note</div>
+            <div id="guest-modal-message" style="background: var(--input-bg); padding: 15px; border-radius: 12px; border-left: 4px solid var(--primary); font-size: 0.95rem; color: var(--text-main); white-space: pre-wrap; word-wrap: break-word; line-height: 1.6;"></div>
+        </div>
+    </div>
+
     <div id="toast"><i class="fas fa-check-circle"></i> <span id="toast-msg">Action Successful</span></div>
 
     <script>
         // --- DATA STATE (IN-MEMORY) ---
         let budgetItems = [];
         let vendors = [
-            { id: 1, category: 'Venue', type: 'Resort Booking', name: 'The Himalayan Resort', total: 0, paid: 0, status: 'pending', contact: '', email: '', website: '', instagram: '', location: '', date: '', notes: 'Check for late night music permissions.', favorite: true }
+            { id: 1, category: 'Venue Manali', type: 'Resort Booking', name: 'The Himalayan Resort', total: 150000, paid: 50000, status: 'booked', contact: '+91 9876543210', email: 'booking@himalayan.com', website: '', instagram: '', location: 'Manali, HP', date: '', notes: 'Check for late night music permissions.', favorite: true, selected: false },
+            { id: 2, category: 'Photography', type: 'Lead Candid', name: 'Aura Captures', total: 80000, paid: 10000, status: 'pending', contact: '', email: '', website: '', instagram: '@auracaptures', location: '', date: '', notes: 'Need drone coverage for Mehndi.', favorite: false, selected: false },
+            { id: 3, category: 'Mehndi', type: 'Bridal Mehndi', name: 'Rani Henna Artist', total: 15000, paid: 15000, status: 'booked', contact: '', email: '', website: '', instagram: '', location: '', date: '', notes: 'Starts at 10 AM on Day 1.', favorite: true, selected: false },
+            { id: 4, category: 'Decor', type: 'Floral & Setup', name: 'Bloom Designs', total: 200000, paid: 0, status: 'pending', contact: '', email: '', website: '', instagram: '', location: '', date: '', notes: 'Pink and white pastel theme for day events.', favorite: false, selected: false }
         ];
         let guests = [];
         let itineraries = [
@@ -968,7 +1021,7 @@
                                 <span style="font-size: 0.75rem; color: var(--text-muted);">${note.date}</span>
                             </div>
                             <div>
-                                <button onclick="event.stopPropagation(); deleteGlobalNote(${note.id})" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size: 0.9rem;" title="Delete Note"><i class="fas fa-trash"></i></button>
+                                <button onclick="event.stopPropagation(); deleteGlobalNote('${note.id}')" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size: 0.9rem;" title="Delete Note"><i class="fas fa-trash"></i></button>
                             </div>
                         </div>
                         ${note.title ? `<div style="font-weight: 700; color: var(--primary-light); margin-bottom: 5px; font-size: 0.95rem;">${note.title}</div>` : ''}
@@ -1005,10 +1058,10 @@
 
         function deleteGlobalNote(id) {
             if(!confirm("Delete this note entirely?")) return;
-            appNotes = appNotes.filter(n => n.id !== id);
+            appNotes = appNotes.filter(n => String(n.id) !== String(id));
             renderSlackNotes();
             
-            if(activeWidgetNoteId === id) {
+            if(String(activeWidgetNoteId) === String(id)) {
                 showWidgetList();
             } else {
                 renderWidgetList();
@@ -1026,9 +1079,13 @@
         }
 
         function getNoteColor(note) {
-            // Generates a deterministic color index based on the note's unique timestamp ID
-            const idx = note.id ? (note.id % pinkPalette.length) : 0;
-            return pinkPalette[idx];
+            const idStr = String(note.id || 0);
+            let hash = 0;
+            for (let i = 0; i < idStr.length; i++) {
+                hash = idStr.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const index = Math.abs(hash) % pinkPalette.length;
+            return pinkPalette[index];
         }
 
         function renderWidgetList() {
@@ -1075,9 +1132,9 @@
         }
 
         function openWidgetNoteEditor(id) {
-            const note = appNotes.find(n => n.id === id);
+            const note = appNotes.find(n => String(n.id) === String(id));
             if(!note) return;
-            activeWidgetNoteId = id;
+            activeWidgetNoteId = note.id;
             
             const color = getNoteColor(note);
 
@@ -1145,7 +1202,7 @@
             statusEl.innerHTML = '<i class="fas fa-sync fa-spin"></i> Saving...';
             statusEl.style.opacity = '1';
 
-            const idx = appNotes.findIndex(n => n.id === activeWidgetNoteId);
+            const idx = appNotes.findIndex(n => String(n.id) === String(activeWidgetNoteId));
             if(idx > -1) {
                 appNotes[idx].title = document.getElementById('widget-note-title').value;
                 appNotes[idx].content = document.getElementById('widget-note-content').value;
@@ -1235,8 +1292,8 @@
                     <td class="currency">${formatCurrency(item.act)}</td>
                     <td class="currency" style="color:${item.act > 0 ? varColor : 'var(--text-muted)'}">${item.act > 0 ? varSign + formatCurrency(variance) : 'Pending'}</td>
                     <td>
-                        <button onclick="editBudget(${item.id})" style="background:transparent; border:none; color:var(--primary-light); cursor:pointer; margin-right:15px; font-size: 1.1rem;"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteBudget(${item.id})" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size: 1.1rem;"><i class="fas fa-trash"></i></button>
+                        <button onclick="editBudget('${item.id}')" style="background:transparent; border:none; color:var(--primary-light); cursor:pointer; margin-right:15px; font-size: 1.1rem;"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteBudget('${item.id}')" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size: 1.1rem;"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1261,12 +1318,14 @@
         }
 
         function editBudget(id) {
-            const item = budgetItems.find(i => i.id === id);
-            editingBudgetId = id;
+            const item = budgetItems.find(i => String(i.id) === String(id));
+            editingBudgetId = item.id;
             document.getElementById('b-item').value = item.name;
             document.getElementById('b-est').value = item.est;
             document.getElementById('b-act').value = item.act;
-            document.getElementById('add-budget-row').style.display = 'flex';
+            const form = document.getElementById('add-budget-row');
+            form.style.display = 'flex';
+            form.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function saveBudgetItem() {
@@ -1277,7 +1336,7 @@
             if(!name) { showToast("Item name is required."); return; }
 
             if(editingBudgetId) {
-                const idx = budgetItems.findIndex(i => i.id === editingBudgetId);
+                const idx = budgetItems.findIndex(i => String(i.id) === String(editingBudgetId));
                 budgetItems[idx] = { ...budgetItems[idx], name, est, act };
                 showToast("Budget Updated.");
             } else {
@@ -1290,7 +1349,7 @@
 
         function deleteBudget(id) {
             if(!confirm("Delete this budget item?")) return;
-            budgetItems = budgetItems.filter(i => i.id !== id);
+            budgetItems = budgetItems.filter(i => String(i.id) !== String(id));
             renderBudget();
             showToast("Item removed.");
         }
@@ -1324,7 +1383,8 @@
         }
 
         function toggleFavoriteVendor(id) {
-            const idx = vendors.findIndex(v => v.id === id);
+            const idx = vendors.findIndex(v => String(v.id) === String(id));
+            if(idx === -1) return;
             vendors[idx].favorite = !vendors[idx].favorite;
             renderVendors(currentVendorFilter);
             if(vendors[idx].favorite) showToast("Added to favorites!");
@@ -1343,6 +1403,7 @@
 
             if(filteredVendors.length === 0) {
                 grid.innerHTML = `<p style="color:var(--text-muted); width: 100%;">No vendors found in this folder.</p>`;
+                updateVendorSummary();
                 return;
             }
             
@@ -1355,13 +1416,20 @@
 
                 const div = document.createElement('div');
                 div.className = 'glass-panel vendor-card';
-                div.style.position = 'relative';
+                if(v.selected) div.style.boxShadow = '0 0 0 2px var(--primary)';
                 div.onclick = () => openVendorDetails(v.id);
                 div.innerHTML = `
-                    <button class="fav-btn ${v.favorite ? 'active' : 'inactive'}" onclick="event.stopPropagation(); toggleFavoriteVendor(${v.id})" title="Favorite"><i class="${favIconClass}"></i></button>
-                    <div style="position:absolute; top:15px; right:15px; z-index: 2;">
-                        <button onclick="event.stopPropagation(); editVendor(${v.id})" style="background:transparent; border:none; color:var(--primary-light); cursor:pointer; margin-right:10px; font-size:1.1rem;"><i class="fas fa-edit"></i></button>
-                        <button onclick="event.stopPropagation(); deleteVendor(${v.id})" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem;"><i class="fas fa-trash"></i></button>
+                    <div style="position:absolute; top:15px; left:15px; z-index: 10;">
+                        <button class="fav-btn ${v.favorite ? 'active' : 'inactive'}" style="position: static;" onclick="event.stopPropagation(); toggleFavoriteVendor('${v.id}')" title="Favorite"><i class="${favIconClass}"></i></button>
+                    </div>
+                    <div class="ribbon-wrapper" onclick="event.stopPropagation(); toggleVendorSelection('${v.id}')" title="Select for Budget Calculator">
+                        <div class="ribbon ${v.selected ? 'selected' : ''}">
+                            <i class="fas ${v.selected ? 'fa-check-square' : 'fa-square'}"></i> Select
+                        </div>
+                    </div>
+                    <div style="position:absolute; top:15px; right:55px; z-index: 2;">
+                        <button onclick="event.stopPropagation(); editVendor('${v.id}')" style="background:transparent; border:none; color:var(--primary-light); cursor:pointer; margin-right:10px; font-size:1.1rem;"><i class="fas fa-edit"></i></button>
+                        <button onclick="event.stopPropagation(); deleteVendor('${v.id}')" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem;"><i class="fas fa-trash"></i></button>
                     </div>
                     <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; margin-top: 30px; font-weight: 600; word-wrap: break-word;">
                         <span style="border: none; padding: 5px 12px; border-radius: 12px; background: ${catColor.bg}; color: ${catColor.color}; display: inline-block;">${v.category || 'Uncategorized'}</span>
@@ -1375,7 +1443,11 @@
                         ${v.location ? `<span><i class="fas fa-map-marker-alt"></i> ${v.location}</span>` : ''}
                     </div>
 
-                    ${v.notes ? `<div style="font-size:0.85rem; color:var(--text-main); margin-bottom:15px; padding: 10px; background: var(--input-bg); border-radius: 8px; border-left: 3px solid ${catColor.bg}; white-space: pre-wrap; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${v.notes}</div>` : ''}
+                    ${v.notes ? `
+                    <div style="position: relative; margin-bottom: 15px;">
+                        <div style="font-size:0.85rem; color:var(--text-main); padding: 10px; padding-right: 35px; background: var(--input-bg); border-radius: 8px; border-left: 3px solid ${catColor.bg}; white-space: pre-wrap; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${v.notes}</div>
+                        <button onclick="event.stopPropagation(); copyVendorNotes('${v.id}')" style="position: absolute; top: 5px; right: 5px; background: transparent; border: none; color: ${catColor.bg !== '#FFFFFF' ? catColor.bg : 'var(--primary)'}; cursor: pointer; padding: 5px; font-size: 1rem;" title="Copy Notes"><i class="far fa-copy"></i></button>
+                    </div>` : ''}
 
                     <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem; font-weight:500;">
                         <span style="color:var(--text-muted)">Total:</span> <span class="currency" style="color: var(--text-main);">${formatCurrency(v.total)}</span>
@@ -1387,7 +1459,45 @@
                 `;
                 grid.appendChild(div);
             });
+            
+            updateVendorSummary();
             updateDashboard();
+        }
+
+        function toggleVendorSelection(id) {
+            const idx = vendors.findIndex(v => String(v.id) === String(id));
+            if(idx === -1) return;
+            vendors[idx].selected = !vendors[idx].selected;
+            renderVendors(currentVendorFilter);
+        }
+
+        function clearVendorSelection() {
+            vendors.forEach(v => v.selected = false);
+            renderVendors(currentVendorFilter);
+        }
+
+        function updateVendorSummary() {
+            const selectedVendors = vendors.filter(v => v.selected);
+            const summaryBar = document.getElementById('vendor-selection-summary');
+            
+            if (!summaryBar) return;
+
+            if(selectedVendors.length === 0) {
+                summaryBar.style.display = 'none';
+                return;
+            }
+            
+            summaryBar.style.display = 'flex';
+            document.getElementById('v-sel-count').innerText = selectedVendors.length;
+            
+            let total = 0, bal = 0;
+            selectedVendors.forEach(v => {
+                total += v.total;
+                bal += (v.total - v.paid);
+            });
+            
+            document.getElementById('v-sel-total').innerText = formatCurrency(total);
+            document.getElementById('v-sel-bal').innerText = formatCurrency(bal);
         }
 
         function openVendorForm() {
@@ -1397,8 +1507,8 @@
         }
 
         function editVendor(id) {
-            const v = vendors.find(i => i.id === id);
-            editingVendorId = id;
+            const v = vendors.find(i => String(i.id) === String(id));
+            editingVendorId = v.id;
             document.getElementById('v-category').value = v.category || '';
             document.getElementById('v-type').value = v.type || '';
             document.getElementById('v-name').value = v.name || '';
@@ -1411,7 +1521,10 @@
             document.getElementById('v-location').value = v.location || '';
             document.getElementById('v-date').value = v.date || '';
             document.getElementById('v-notes').value = v.notes || '';
-            document.getElementById('add-vendor-row').style.display = 'flex';
+            
+            const form = document.getElementById('add-vendor-row');
+            form.style.display = 'flex';
+            form.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function saveVendor() {
@@ -1434,12 +1547,13 @@
             data.status = data.paid > 0 ? 'booked' : 'pending';
 
             if(editingVendorId) {
-                const idx = vendors.findIndex(i => i.id === editingVendorId);
+                const idx = vendors.findIndex(i => String(i.id) === String(editingVendorId));
                 data.favorite = vendors[idx].favorite; 
+                data.selected = vendors[idx].selected || false;
                 vendors[idx] = { ...vendors[idx], ...data };
                 showToast("Vendor updated.");
             } else {
-                vendors.push({ id: Date.now(), favorite: false, ...data });
+                vendors.push({ id: Date.now(), favorite: false, selected: false, ...data });
                 showToast("Vendor added successfully.");
             }
             closeForm('add-vendor-row');
@@ -1448,14 +1562,14 @@
 
         function deleteVendor(id) {
             if(!confirm("Delete this vendor?")) return;
-            vendors = vendors.filter(i => i.id !== id);
+            vendors = vendors.filter(i => String(i.id) !== String(id));
             renderVendors();
             showToast("Vendor removed.");
         }
 
         // --- VENDOR MODAL LOGIC ---
         function openVendorDetails(id) {
-            const v = vendors.find(i => i.id === id);
+            const v = vendors.find(i => String(i.id) === String(id));
             if(!v) return;
             
             const bal = v.total - v.paid;
@@ -1510,12 +1624,15 @@
 
                 ${v.notes ? `
                 <div style="margin-bottom: 20px;">
-                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 10px;">More Info / Notes</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>More Info / Notes</span>
+                        <button onclick="copyVendorNotes('${v.id}')" style="background: transparent; border: none; color: var(--primary); cursor: pointer; font-size: 0.85rem;"><i class="far fa-copy"></i> Copy</button>
+                    </div>
                     <div style="background: var(--input-bg); padding: 15px; border-radius: 12px; border-left: 4px solid ${catColor.bg}; font-size: 0.95rem; color: var(--text-main); white-space: pre-wrap; word-wrap: break-word; line-height: 1.6;">${v.notes}</div>
                 </div>` : ''}
 
                 <div style="text-align: center; margin-top: 30px;">
-                    <button class="btn" onclick="closeVendorDetails(); editVendor(${v.id}); event.stopPropagation();" style="width: 100%; justify-content: center; background: ${catColor.bg}; color: ${catColor.color};"><i class="fas fa-edit"></i> Edit Vendor</button>
+                    <button class="btn" onclick="closeVendorDetails(); editVendor('${v.id}'); event.stopPropagation();" style="width: 100%; justify-content: center; background: ${catColor.bg}; color: ${catColor.color};"><i class="fas fa-edit"></i> Edit Vendor</button>
                 </div>
             `;
             
@@ -1528,11 +1645,14 @@
         }
 
         function copyVendorNotes(id) {
-            const v = vendors.find(i => i.id === id);
+            const v = vendors.find(i => String(i.id) === String(id));
             if(!v || !v.notes) return;
             
             const el = document.createElement('textarea');
             el.value = v.notes;
+            el.setAttribute('readonly', '');
+            el.style.position = 'absolute';
+            el.style.left = '-9999px'; // Hides it so page won't jump
             document.body.appendChild(el);
             el.select();
             document.execCommand('copy');
@@ -1542,15 +1662,47 @@
         }
 
         // --- 3. GUEST MANAGER LOGIC ---
+        let currentGuestFilter = 'all';
+
+        function setGuestFilter(filter) {
+            currentGuestFilter = filter;
+            const buttons = document.querySelectorAll('#guest-filters .filter-btn');
+            buttons.forEach(btn => {
+                if (btn.getAttribute('data-filter') === filter) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            renderGuests();
+        }
+
         function renderGuests() {
             const tbody = document.getElementById('guest-table-body');
             tbody.innerHTML = '';
             let confirmed = 0, pending = 0;
 
+            // Calculate stats for all guests
             guests.forEach((g) => {
                 if(g.rsvp === 'confirmed') confirmed++;
                 if(g.rsvp === 'pending') pending++;
+            });
 
+            document.getElementById('g-total').innerText = guests.length;
+            document.getElementById('g-confirmed').innerText = confirmed;
+            document.getElementById('g-pending').innerText = pending;
+
+            // Filter for the table view
+            let filteredGuests = guests;
+            if (currentGuestFilter !== 'all') {
+                filteredGuests = guests.filter(g => g.side === currentGuestFilter);
+            }
+
+            if (filteredGuests.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">No guests found for this filter.</td></tr>`;
+            }
+
+            filteredGuests.forEach((g) => {
                 let badgeCls = g.rsvp === 'confirmed' ? 'confirmed' : (g.rsvp === 'declined' ? 'declined' : 'pending');
 
                 const tr = document.createElement('tr');
@@ -1562,26 +1714,22 @@
                     </td>
                     <td style="font-weight: 500;">${g.side}</td>
                     <td style="text-align: center;">
-                        ${g.notes ? `<button onclick="openGuestMessage(${g.id})" style="background: transparent; border: none; color: var(--primary-light); cursor: pointer; font-size: 1.3rem;" title="View Message"><i class="fas fa-envelope-open-text"></i></button>` : `<span style="color: var(--text-muted); opacity: 0.5;">-</span>`}
+                        ${g.notes ? `<button onclick="openGuestMessage('${g.id}')" style="background: transparent; border: none; color: var(--primary-light); cursor: pointer; font-size: 1.3rem;" title="View Message"><i class="fas fa-envelope-open-text"></i></button>` : `<span style="color: var(--text-muted); opacity: 0.5;">-</span>`}
                     </td>
                     <td>
-                        <select onchange="changeRSVP(${g.id}, this.value)" style="padding:6px; font-size:0.8rem; border-color: var(--border-glass); background: var(--input-bg); font-weight: 600;">
+                        <select onchange="changeRSVP('${g.id}', this.value)" style="padding:6px; font-size:0.8rem; border-color: var(--border-glass); background: var(--input-bg); font-weight: 600;">
                             <option value="pending" ${g.rsvp==='pending'?'selected':''}>Pending</option>
                             <option value="confirmed" ${g.rsvp==='confirmed'?'selected':''}>Confirmed</option>
                             <option value="declined" ${g.rsvp==='declined'?'selected':''}>Declined</option>
                         </select>
                     </td>
                     <td>
-                        <button onclick="editGuest(${g.id})" style="background:transparent; border:none; color:var(--primary-light); cursor:pointer; margin-right:15px; font-size:1.1rem;"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteGuest(${g.id})" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem;"><i class="fas fa-trash"></i></button>
+                        <button onclick="editGuest('${g.id}')" style="background:transparent; border:none; color:var(--primary-light); cursor:pointer; margin-right:15px; font-size:1.1rem;"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteGuest('${g.id}')" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem;"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            document.getElementById('g-total').innerText = guests.length;
-            document.getElementById('g-confirmed').innerText = confirmed;
-            document.getElementById('g-pending').innerText = pending;
 
             updateDashboard();
         }
@@ -1597,15 +1745,18 @@
         }
 
         function editGuest(id) {
-            const g = guests.find(i => i.id === id);
-            editingGuestId = id;
+            const g = guests.find(i => String(i.id) === String(id));
+            editingGuestId = g.id;
             document.getElementById('g-name').value = g.name || '';
             document.getElementById('g-phone').value = g.phone || '';
             document.getElementById('g-email').value = g.email || '';
             document.getElementById('g-side').value = g.side || "Bride's Side";
             document.getElementById('g-rsvp').value = g.rsvp || "pending";
             if(document.getElementById('g-notes')) document.getElementById('g-notes').value = g.notes || '';
-            document.getElementById('add-guest-row').style.display = 'flex';
+            
+            const form = document.getElementById('add-guest-row');
+            form.style.display = 'flex';
+            form.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function saveGuest() {
@@ -1619,7 +1770,7 @@
             if(!name) { showToast("Guest name is required."); return; }
 
             if(editingGuestId) {
-                const idx = guests.findIndex(i => i.id === editingGuestId);
+                const idx = guests.findIndex(i => String(i.id) === String(editingGuestId));
                 guests[idx] = { ...guests[idx], name, phone, email, side, rsvp, notes };
                 showToast("Guest updated.");
             } else {
@@ -1631,7 +1782,7 @@
         }
 
         function openGuestMessage(id) {
-            const g = guests.find(i => i.id === id);
+            const g = guests.find(i => String(i.id) === String(id));
             if(!g || !g.notes) return;
             document.getElementById('guest-modal-name').innerText = g.name;
             document.getElementById('guest-modal-message').innerText = g.notes;
@@ -1643,7 +1794,7 @@
         }
 
         function changeRSVP(id, newStatus) {
-            const idx = guests.findIndex(i => i.id === id);
+            const idx = guests.findIndex(i => String(i.id) === String(id));
             guests[idx].rsvp = newStatus;
             renderGuests();
             showToast("RSVP status updated.");
@@ -1651,7 +1802,7 @@
 
         function deleteGuest(id) {
             if(!confirm("Remove this guest?")) return;
-            guests = guests.filter(i => i.id !== id);
+            guests = guests.filter(i => String(i.id) !== String(id));
             renderGuests();
             showToast("Guest removed.");
         }
@@ -1678,8 +1829,8 @@
                             </p>
                         </div>
                         <div>
-                            <button onclick="editItinerary(${itin.id})" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; margin-right:15px; font-size:1.2rem;"><i class="fas fa-edit"></i></button>
-                            <button onclick="deleteItinerary(${itin.id})" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:1.2rem;"><i class="fas fa-trash"></i></button>
+                            <button onclick="editItinerary('${itin.id}')" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; margin-right:15px; font-size:1.2rem;"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteItinerary('${itin.id}')" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:1.2rem;"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                     ${tasksHtml ? `<hr style="border: none; border-top: 1px solid var(--border-glass); margin: 15px 0;">
@@ -1699,14 +1850,17 @@
         }
 
         function editItinerary(id) {
-            const itin = itineraries.find(i => i.id === id);
-            editingItineraryId = id;
+            const itin = itineraries.find(i => String(i.id) === String(id));
+            editingItineraryId = itin.id;
             document.getElementById('i-title').value = itin.title || '';
             document.getElementById('i-location').value = itin.location || '';
             document.getElementById('i-time').value = itin.time || '';
             document.getElementById('i-color').value = itin.color || 'var(--primary)';
             document.getElementById('i-tasks').value = itin.tasks || '';
-            document.getElementById('add-itinerary-row').style.display = 'flex';
+            
+            const form = document.getElementById('add-itinerary-row');
+            form.style.display = 'flex';
+            form.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function saveItinerary() {
@@ -1722,7 +1876,7 @@
             };
 
             if(editingItineraryId) {
-                const idx = itineraries.findIndex(i => i.id === editingItineraryId);
+                const idx = itineraries.findIndex(i => String(i.id) === String(editingItineraryId));
                 itineraries[idx] = { ...itineraries[idx], ...data };
                 showToast("Itinerary updated.");
             } else {
@@ -1735,7 +1889,7 @@
 
         function deleteItinerary(id) {
             if(!confirm("Delete this event?")) return;
-            itineraries = itineraries.filter(i => i.id !== id);
+            itineraries = itineraries.filter(i => String(i.id) !== String(id));
             renderItinerary();
             showToast("Event removed.");
         }
